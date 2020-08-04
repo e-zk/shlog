@@ -1,7 +1,10 @@
 #!/bin/sh -e
+#
+#
 
-# TODO config
+# TODO config paths
 [ -f ./shlog.conf ] && . ./shlog.conf
+
 
 # basename implementation
 # (from pure-sh-bible)
@@ -36,13 +39,16 @@ log() {
 	printf "[%s] %s\\n" "$level" "$message"
 }
 
-#
+# get markdown article title by extracting the first h1
+# requires the first line of all post .md files to be the h1
+# $1 : markdown file
 get_md_title() {
 	md_file="$1"
 	head -n 1 "$md_file" | sed -e '^#\ \(.*\)$/\1/g'
 }
 
-#
+# get date from post filename
+# $1 : markdown file
 get_md_date() {
 	md_filename="$(bname "$1")"
 	echo "$md_filename" | sed -e 's/^\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)-.*.md$/\1/g'
@@ -69,10 +75,6 @@ get_unpost_list() {
 	done
 	reverse "$posts"
 }
-
-# TODO move these
-HEAD_CONTENT=./head.html
-NAV_CONTENT=./nav.html
 
 # generate navgation html
 gen_html_nav() {
