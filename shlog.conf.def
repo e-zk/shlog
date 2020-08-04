@@ -1,15 +1,20 @@
 #!/bin/sh
+# shlog.conf.def
+# example shlog config
 
-# site domain + url
+# site info
 DOMAIN=example.com
-WWW="https://${DOMAIN}"
+WWW="https://${DOMAIN}"    # (url)
+WWW_TITLE="example's blog" # (site title, used in <title>)
 
 # git repo of website
 GIT_ROOT=${HOME}/src/blog
 
 # dir where html 'templates' are stored
 HTML_DIR=${GIT_ROOT}/html
-
 # dir containing posts (.html + .md)
 POSTS_DIR=${GIT_ROOT}/posts
 
+# 
+HEAD_CONTENT=${HTML_DIR}/head.html
+NAV_CONTENT=${HTML_DIR}/nav.html
