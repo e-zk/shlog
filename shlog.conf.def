@@ -1,0 +1,15 @@
+#!/bin/sh
+
+# site domain + url
+DOMAIN=example.com
+WWW="https://${DOMAIN}"
+
+# git repo of website
+GIT_ROOT=${HOME}/src/blog
+
+# dir where html 'templates' are stored
+HTML_DIR=${GIT_ROOT}/html
+
+# dir containing posts (.html + .md)
+POSTS_DIR=${GIT_ROOT}/posts
+

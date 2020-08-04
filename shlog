@@ -1,0 +1,123 @@
+#!/bin/sh -e
+
+# TODO config
+[ -f ./shlog.conf ] && . ./shlog.conf
+
+# basename implementation
+# (from pure-sh-bible)
+bname() {
+	dir=${1%${1##*[!/]}}
+	dir=${dir##*/}
+	dir=${dir%"$2"}
+	printf '%s\n' "${dir:-/}"
+}
+
+# cross-platform reverse cat
+reverse() {
+	if command -v tac >/dev/null; then
+		echo "$1" | tac
+	else
+		echo "$1" | tail -r
+	fi
+}
+
+# log
+# $1 : message
+# $2 : (optional) log label
+log() {
+	message="$1"
+	level="$2"
+
+	if [ -z "$level" ]; then
+	        printf "[blog] %s\\n" "$message"
+	        return
+	fi
+
+	printf "[%s] %s\\n" "$level" "$message"
+}
+
+#
+get_md_title() {
+	md_file="$1"
+	head -n 1 "$md_file" | sed -e '^#\ \(.*\)$/\1/g'
+}
+
+#
+get_md_date() {
+	md_filename="$(bname "$1")"
+	echo "$md_filename" | sed -e 's/^\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)-.*.md$/\1/g'
+}
+
+# get list of all posts
+get_post_list() {
+	posts=''
+	for post in ${POSTS_DIR}/*.html; do
+		posts="${posts}\\n${post}"
+	done
+	reverse "$posts"
+}
+
+# get list of unposted posts (.md files without their .html counterparts)
+get_unpost_list() {
+	posts=''
+	for post in ${POSTS_DIR}/*.md; do
+		# if the .html exists, it has already been compiled
+		if [ -f "${post%%.*}.html" ]; then
+			continue
+		fi
+		posts="${posts}\\n${post}"
+	done
+	reverse "$posts"
+}
+
+# TODO move these
+HEAD_CONTENT=./head.html
+NAV_CONTENT=./nav.html
+
+# generate navgation html
+gen_html_nav() {
+	printf '<nav>\n'
+	printf '<p>\n'
+	printf '<a href="%s">%s</a>\n' "/" "$DOMAIN"
+	cat "$NAV_CONTENT"
+	printf '</p>\n'
+	printf '</nav>\n'
+}
+
+# generate html head
+# $1 : html title
+gen_html_head() {
+	html_title="$1"
+
+	printf '<head>\n'
+	cat "$HEAD_CONTENT"
+	printf '<title>%s</title>' "$html_title"
+	printf '</head>\n'
+}
+
+# generate post's html
+# $1 : post title
+# $2 : post html content
+gen_html_post() {
+	post_title="$1"
+	post_content="$2"
+
+	printf '<!DOCTYPE html>\n'
+	printf '<html>\n'
+	gen_html_head "${post_title} - ${WWW_TITLE}"
+	printf '<body>\n'
+	gen_html_nav
+	printf '<main>\n'
+	printf '%s\n' "$post_content"
+	printf '</main>\n'
+	printf '</body>\n'
+	printf '</html>\n'
+}
+
+for post in $(get_unpost_list); do
+	post_date="$(get_md_date "$post")"
+	post_html="$(lowdown -Thtml "$post")"
+
+	gen_html_post "some title" "$post_html"
+done
+
