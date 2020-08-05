@@ -116,10 +116,17 @@ gen_html_post() {
 	printf '</html>\n'
 }
 
-for post in $(get_unpost_list); do
+# for each .md file without a .html counterpart...
+for post in "$(get_unpost_list)"; do
+
+	if [ -z "$post" ]; then
+		continue
+	fi
+
 	post_date="$(get_md_date "$post")"
 	post_html="$(lowdown -Thtml "$post")"
 
-	gen_html_post "some title" "$post_html"
+	# generate the post's html
+	gen_html_post "some title" "$post_html" > "${post%%.*}.html"
 done
 
