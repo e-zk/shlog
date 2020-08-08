@@ -13,3 +13,9 @@ config
 the config file is located at `${XDG_CONFIG_HOME}/shlog/shlog.conf`.  
 a default config is included as `shlog.conf.def`.
 
+TODO
+----
+* add info/footer
+	- plaintext link
+	- date posted
+	- last modified/last re-generated
