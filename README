@@ -1,5 +1,10 @@
 shlog
 =====
-a blog in /bin/sh
+a blog in /bin/sh.  
+this project is a work in progress.
 
-this project is very much a work in progress
+depends
+-------
+* /bin/sh  
+* lowdown  
+
