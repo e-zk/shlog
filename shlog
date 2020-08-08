@@ -2,7 +2,6 @@
 #
 #
 
-
 usage() {
 	cat<<EOF
 shlog - shell blog
@@ -148,7 +147,7 @@ gen_index() {
 		post_title="$(get_md_title "$post_md")"
 		post_bname="$(bname "$post")"
 
-		printf '<li><a href="%s/posts/%s"><span class="postdate">%s</span> &bull; %s</li>\n' "$WWW" "$post_bname" "$post_date" "$post_title"
+		printf '<li><a href="%s/posts/%s"><span class="postdate">%s</span> &bull; %s</li>\n' "$WWW" "${post_bname%%.*}" "$post_date" "$post_title"
 	done
 
 	printf '</ul>\n'
@@ -176,14 +175,20 @@ compile_posts() {
 
 		log "adding $(bname "$post")..."
 
+		# md
+		post_md="${post%%.*}.md"
+
 		# get post date
 		post_date="$(get_post_date "$post")"
+
+		# get post title
+		post_title="$(get_md_title "$post_md")"
 
 		# generate html from markdown
 		post_html="$(lowdown -Thtml "$post")"
 
 		# generate the post's html
-		gen_html_post "some title" "$post_html" > "${post%%.*}.html"
+		gen_html_post "$post_title" "$post_html" > "${post%%.*}.html"
 	done
 
 }
