@@ -2,9 +2,17 @@
 #
 #
 
-# TODO config paths
-[ -f ./shlog.conf ] && . ./shlog.conf
 
+usage() {
+	cat<<EOF
+shlog - shell blog
+usage: shlog [i|index] [r|rss] [u|update]
+
+	i|index
+	r|rss
+	u|update
+EOF
+}
 
 # basename implementation
 # (from pure-sh-bible)
@@ -32,7 +40,7 @@ log() {
 	level="$2"
 
 	if [ -z "$level" ]; then
-	        printf "[blog] %s\\n" "$message"
+	        printf "%s\\n" "$message"
 	        return
 	fi
 
@@ -44,20 +52,23 @@ log() {
 # $1 : markdown file
 get_md_title() {
 	md_file="$1"
-	head -n 1 "$md_file" | sed -e '^#\ \(.*\)$/\1/g'
+	head -n 1 "$md_file" | sed -e 's/^#\ \(.*\)$/\1/g'
 }
 
 # get date from post filename
 # $1 : markdown file
-get_md_date() {
+get_post_date() {
 	md_filename="$(bname "$1")"
-	echo "$md_filename" | sed -e 's/^\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)-.*.md$/\1/g'
+	echo "$md_filename" | sed -e 's/^\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)-.*$/\1/g'
 }
 
 # get list of all posts
 get_post_list() {
 	posts=''
 	for post in ${POSTS_DIR}/*.html; do
+		if [ "$(bname "$post")" = "index.html" ]; then
+			continue
+		fi
 		posts="${posts}\\n${post}"
 	done
 	reverse "$posts"
@@ -69,6 +80,9 @@ get_unpost_list() {
 	for post in ${POSTS_DIR}/*.md; do
 		# if the .html exists, it has already been compiled
 		if [ -f "${post%%.*}.html" ]; then
+			continue
+		fi
+		if [ "$(bname "$post")" = "index.html" ]; then
 			continue
 		fi
 		posts="${posts}\\n${post}"
@@ -116,17 +130,82 @@ gen_html_post() {
 	printf '</html>\n'
 }
 
-# for each .md file without a .html counterpart...
-for post in "$(get_unpost_list)"; do
+# generate posts index page
+gen_index() {
+	printf '<!DOCTYPE html>\n'
+	printf '<html>\n'
+	gen_html_head "${WWW_TITLE}"
+	printf '<body>\n'
+	gen_html_nav
+	printf '<main>\n'
+	printf '<h1>Web log</h1>\n'
+	printf '<ul class="postslist">\n'
 
-	if [ -z "$post" ]; then
-		continue
+	#  for each post add a list item
+	for post in $(get_post_list); do
+		post_md="${post%%.*}.md"
+		post_date="$(get_post_date "$post")"
+		post_title="$(get_md_title "$post_md")"
+		post_bname="$(bname "$post")"
+
+		printf '<li><a href="%s/posts/%s"><span class="postdate">%s</span> &bull; %s</li>\n' "$WWW" "$post_bname" "$post_date" "$post_title"
+	done
+
+	printf '</ul>\n'
+	printf '</main>\n'
+	printf '</body>\n'
+	printf '</html>\n'
+}
+
+# compile all .md files without .html couterparts
+compile_posts() {
+	posts="$(get_unpost_list)"
+
+	# return if there are no posts to update
+	if [ -z "$posts" ]; then
+		log "no posts to update"
+		return
 	fi
 
-	post_date="$(get_md_date "$post")"
-	post_html="$(lowdown -Thtml "$post")"
+	# for each .md file without a .html counterpart...
+	for post in $posts; do
+	
+		if [ -z "$post" ]; then
+			continue
+		fi
 
-	# generate the post's html
-	gen_html_post "some title" "$post_html" > "${post%%.*}.html"
-done
+		log "adding $(bname "$post")..."
 
+		# get post date
+		post_date="$(get_post_date "$post")"
+
+		# generate html from markdown
+		post_html="$(lowdown -Thtml "$post")"
+
+		# generate the post's html
+		gen_html_post "some title" "$post_html" > "${post%%.*}.html"
+	done
+
+}
+
+main() {
+
+	# load config
+	DEF_CONFIG="${XDG_CONFIG_HOME:-${HOME}/.config}/shlog/shlog.conf"
+	if [ -f "${DEF_CONFIG}" ]; then
+		. "${DEF_CONFIG}"
+	else
+		log "cannot load config. exiting" "error"
+		exit 1
+	fi
+
+	# 
+	case "$1" in
+		h|-h|help)   usage                                 ;;
+		""|u|update) compile_posts                         ;;
+		i|index)     gen_index > "${POSTS_DIR}/index.html" ;;
+		*)           log "unsupported command $1" "error"  ;;
+	esac
+}
+
+main "$@"
