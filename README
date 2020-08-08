@@ -8,3 +8,8 @@ depends
 * /bin/sh  
 * lowdown  
 
+config
+------
+the config file is located at `${XDG_CONFIG_HOME}/shlog/shlog.conf`.  
+a default config is included as `shlog.conf.def`.
+
