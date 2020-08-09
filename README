@@ -1,7 +1,28 @@
 shlog
 =====
 a blog in /bin/sh.  
-this project is a work in progress.
+
++-------------------------------------------+
+| warn: this project is a work in progress. |
++-------------------------------------------+
+
+usage
+-----
+plaintext posts are .md files named in the format `YYYY-MM-DD-title.md` stored
+in the $POSTS_DIR. once converted to html these posts are named the same, but
+with a .html extension.
+upon updating, the shlog script searches the $POSTS_DIR for any .md files that
+do not have a .html counterpart, and converts these posts to HTML.
+
+usage: shlog [i|index] [r|rss] [u|update]
+
+i|index  : generate a posts index page which lists all posts and links to them
+           (newest-first).
+r|rss    : generate/update the posts rss feed located at $RSS_FEED.
+u|update : search $POSTS_DIR for .md files that have not been converted to html
+           and convert them.
+
+when not given any arguments shlog defaults to [u|update].
 
 depends
 -------
