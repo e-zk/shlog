@@ -22,6 +22,19 @@ bname() {
 	printf '%s\n' "${dir:-/}"
 }
 
+# convert input date to RFC2822
+# time and tz are set to 00:00:00 +0000
+# (only works with bsd date)
+# $1 - input date
+# $2 - input date format
+date_to_rfc2822() {
+	date="$1"
+	format="$2"
+	# for full conversion
+	#date -j -f "${format}" "${date}" "+%a, %d %b %T %z"
+	date -j -f "${format}" "${date}" "+%a, %d %b 00:00:00 +0000"
+}
+
 # cross-platform reverse cat
 reverse() {
 	if command -v tac >/dev/null; then
@@ -32,8 +45,8 @@ reverse() {
 }
 
 # log
-# $1 : message
-# $2 : (optional) log label
+# $1 - message
+# $2 - (optional) log label
 log() {
 	message="$1"
 	level="$2"
@@ -48,14 +61,14 @@ log() {
 
 # get markdown article title by extracting the first h1
 # requires the first line of all post .md files to be the h1
-# $1 : markdown file
+# $1 - markdown file
 get_md_title() {
 	md_file="$1"
 	head -n 1 "$md_file" | sed -e 's/^#\ \(.*\)$/\1/g'
 }
 
 # get date from post filename
-# $1 : markdown file
+# $1 - markdown file
 get_post_date() {
 	md_filename="$(bname "$1")"
 	echo "$md_filename" | sed -e 's/^\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)-.*$/\1/g'
@@ -100,7 +113,7 @@ gen_html_nav() {
 }
 
 # generate html head
-# $1 : html title
+# $1 - html title
 gen_html_head() {
 	html_title="$1"
 
@@ -111,8 +124,8 @@ gen_html_head() {
 }
 
 # generate post's html
-# $1 : post title
-# $2 : post html content
+# $1 - post title
+# $2 - post html content
 gen_html_post() {
 	post_title="$1"
 	post_content="$2"
@@ -140,20 +153,47 @@ gen_index() {
 	printf '<h1>Web log</h1>\n'
 	printf '<ul class="postslist">\n'
 
-	#  for each post add a list item
+	# add a <li> for each post
 	for post in $(get_post_list); do
 		post_md="${post%%.*}.md"
 		post_date="$(get_post_date "$post")"
 		post_title="$(get_md_title "$post_md")"
 		post_bname="$(bname "$post")"
 
-		printf '<li><a href="%s/posts/%s"><span class="postdate">%s</span> &bull; %s</li>\n' "$WWW" "${post_bname%%.*}" "$post_date" "$post_title"
+		printf '<li><a href="%s/posts/%s"><span class="postdate">%s</span> <strong>&bull; <strong>%s</strong></li>\n' "$WWW" "${post_bname%%.*}" "$post_date" "$post_title"
 	done
 
 	printf '</ul>\n'
 	printf '</main>\n'
 	printf '</body>\n'
 	printf '</html>\n'
+}
+
+
+# generate rss feed
+gen_rss() {
+	printf '<rss version="2.0" xml:base="%s">\n' "${WWW}"
+	printf '<channel>\n'
+	printf '<title>%s</title>\n' "${RSS_TITLE}"
+	printf '<description/>\n'
+	printf '<link>%s</link>\n' "${RSS_LINK}"
+
+	# add an <item> for each post
+	for post in $(get_post_list); do
+		post_md="${post%%.*}.md"
+		post_date="$(get_post_date "$post")"
+		post_title="$(get_md_title "$post_md")"
+		post_bname="$(bname "$post")"
+
+		printf '<item>\n'
+		printf '<link>%s</link>\n'       "${WWW}/posts/${post_bname%%.*}"
+		printf '<title>%s</title>\n'     "$post_title"
+		printf '<pubDate>%s</pubDate>\n' "$(date_to_rfc2822 "$post_date" '%F')"
+		printf '</item>\n'
+	done
+
+	printf '</channel>\n'
+	printf '</rss>\n'
 }
 
 # compile all .md files without .html couterparts
@@ -208,7 +248,8 @@ main() {
 	case "$1" in
 		h|-h|help)   usage                                 ;;
 		""|u|update) compile_posts                         ;;
-		i|index)     gen_index > "${POSTS_DIR}/index.html" ;;
+		i|index)     gen_index > "$POSTS_INDEX"            ;;
+		r|rss)       gen_rss > "$RSS_FEED"                 ;;
 		*)           log "unsupported command $1" "error"  ;;
 	esac
 }
