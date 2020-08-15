@@ -22,6 +22,15 @@ bname() {
 	printf '%s\n' "${dir:-/}"
 }
 
+# is 
+is_yes() {
+	case "$1" in
+		y|Y*) return 0 ;;
+		n|N*) return 1 ;;
+	esac
+	return 1
+}
+
 # convert input date to RFC2822
 # time and tz are set to 00:00:00 +0000
 # (only works with bsd date)
@@ -123,12 +132,29 @@ gen_html_head() {
 	printf '</head>\n'
 }
 
+# generate info
+# $1 - post plaintext
+# $2 - post date
+# $3 - post last modified
+gen_html_info() {
+	post_pt="$1"
+	post_date="$2"
+	post_modified="$3"
+	
+	printf '<p class="info">\n'
+	printf '<a href="%s">plaintext</a><br/>\n' "$(bname "$post_pt")"
+	printf 'created:%s modified:%s\n' "$post_date" "$post_modified"
+	printf '</p>\n'
+}
+
 # generate post's html
 # $1 - post title
 # $2 - post html content
+# $3 - post info/footer (optional)
 gen_html_post() {
 	post_title="$1"
 	post_content="$2"
+	post_foot="${3:-''}"
 
 	printf '<!DOCTYPE html>\n'
 	printf '<html>\n'
@@ -137,6 +163,7 @@ gen_html_post() {
 	gen_html_nav
 	printf '<main>\n'
 	printf '%s\n' "$post_content"
+	printf '%s\n' "$post_foot"
 	printf '</main>\n'
 	printf '</body>\n'
 	printf '</html>\n'
@@ -160,7 +187,14 @@ gen_index() {
 		post_title="$(get_md_title "$post_md")"
 		post_bname="$(bname "$post")"
 
-		printf '<li><a href="%s/posts/%s"><span class="postdate">%s</span> <strong>&bull; <strong>%s</strong></li>\n' "$WWW" "${post_bname%%.*}" "$post_date" "$post_title"
+		# use full paths, or relative paths ?
+		if is_yes "$REL_PATHS"; then
+			post_url="/posts/${post_bname%%.*}"
+		else
+			post_url="${WWW}/posts/${post_bname%%.*}"
+		fi
+
+		printf '<li><a href="%s"><span class="postdate">%s</span> <strong>&bull; %s</strong></li>\n' "$post_url" "$post_date" "$post_title"
 	done
 
 	printf '</ul>\n'
@@ -188,6 +222,15 @@ gen_rss() {
 		printf '<item>\n'
 		printf '<link>%s</link>\n'       "${WWW}/posts/${post_bname%%.*}"
 		printf '<title>%s</title>\n'     "$post_title"
+
+		if is_yes "$RSS_INCLUDE_HTML"; then
+			post_html="$(lowdown -Thtml "$post_md")"
+
+			printf '<description>\n'
+			printf '%s\n' "$post_html"
+			printf '</description>\n'
+		fi
+
 		printf '<pubDate>%s</pubDate>\n' "$(date_to_rfc2822 "$post_date" '%F')"
 		printf '</item>\n'
 	done
@@ -221,14 +264,20 @@ compile_posts() {
 		# get post date
 		post_date="$(get_post_date "$post")"
 
+		# the current date is the last modified date
+		post_modified="$(date '+%F')"
+
 		# get post title
 		post_title="$(get_md_title "$post_md")"
 
 		# generate html from markdown
 		post_html="$(lowdown -Thtml "$post")"
 
+		# generate info/footer
+		post_foot="$(gen_html_info "$post_md" "$post_date" "$post_modified")"
+
 		# generate the post's html
-		gen_html_post "$post_title" "$post_html" > "${post%%.*}.html"
+		gen_html_post "$post_title" "$post_html" "$post_foot" > "${post%%.*}.html"
 	done
 
 }
