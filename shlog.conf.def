@@ -9,6 +9,14 @@ WWW="https://${DOMAIN}"
 WWW_TITLE="example's blog"
 
 
+#           #
+# Y\N FLAGS # 
+#           #
+
+# use relative paths?
+REL_PATHS=y
+
+
 #             #
 # DIRECTORIES #
 #             #
@@ -40,6 +48,8 @@ RSS_FEED=${GIT_ROOT}/rss.xml
 RSS_TITLE=${WWW_TITLE}
 # rss feed <link>
 RSS_LINK=${WWW}
+# include HTML of article in rss item?
+RSS_INCLUDE_HTML=y
 
 
 #         #
