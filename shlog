@@ -177,7 +177,7 @@ gen_index() {
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
-	printf '<h1>Web log</h1>\n'
+	cat "$POSTINDEX_CONTENT"
 	printf '<ul class="postslist">\n'
 
 	# add a <li> for each post
@@ -194,7 +194,10 @@ gen_index() {
 			post_url="${WWW}/posts/${post_bname%%.*}"
 		fi
 
-		printf '<li><a href="%s"><span class="postdate">%s</span> <strong>&bull; %s</strong></li>\n' "$post_url" "$post_date" "$post_title"
+		# TODO: find a better way to do this
+		fmt="$(echo "$POST_LIST_FORMAT" | sed -e "s/%d/${post_date}/" -e "s,%t,${post_title},")" 
+
+		printf '<li><a href="%s">%s</li>\n' "$post_url" "$fmt"
 	done
 
 	printf '</ul>\n'

@@ -58,3 +58,7 @@ RSS_INCLUDE_HTML=y
 
 HEAD_CONTENT=${HTML_DIR}/head.html
 NAV_CONTENT=${HTML_DIR}/nav.html
+POSTINDEX_CONTENT=${HTML_DIR}/posts.html
+
+# format posts are listed in, can include html
+POST_LIST_FORMAT="<span class=\"postdate\">%d</span> &mdash; %t"
