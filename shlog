@@ -40,8 +40,8 @@ date_to_rfc2822() {
 	date="$1"
 	format="$2"
 	# for full conversion
-	#date -j -f "${format}" "${date}" "+%a, %d %b %T %z"
-	date -j -f "${format}" "${date}" "+%a, %d %b 00:00:00 +0000"
+	#date -j -f "${format}" "${date}" "+%a, %d %b %Y %T %z"
+	date -j -f "${format}" "${date}" "+%a, %d %b %Y 00:00:00 +0000"
 }
 
 # cross-platform reverse cat
