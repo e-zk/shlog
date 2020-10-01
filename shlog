@@ -111,7 +111,7 @@ get_unpost_list() {
 	reverse "$posts"
 }
 
-# generate navgation html
+# generate navgation/header html
 gen_html_nav() {
 	printf '<nav>\n'
 	printf '<p>\n'
@@ -132,19 +132,22 @@ gen_html_head() {
 	printf '</head>\n'
 }
 
-# generate info
-# $1 - post plaintext
-# $2 - post date
+# generate footer
+# $1 - post plaintext link
+# $2 - date posted
 # $3 - post last modified
-gen_html_info() {
+gen_html_footer() {
 	post_pt="$1"
 	post_date="$2"
 	post_modified="$3"
 	
-	printf '<p class="info">\n'
-	printf '<a href="%s">plaintext</a><br/>\n' "$(bname "$post_pt")"
-	printf 'created:%s modified:%s\n' "$post_date" "$post_modified"
+	printf '<footer>\n'
+	printf '<p>\n'
+	printf '<a href="%s">view plaintext</a><br/>\n' "$(bname "$post_pt")"
+	printf 'created:%s modified:%s<br/>\n' "$post_date" "$post_modified"
+	cat "$FOOTER_CONTENT"
 	printf '</p>\n'
+	printf '</footer>\n'
 }
 
 # generate post's html
@@ -163,8 +166,8 @@ gen_html_post() {
 	gen_html_nav
 	printf '<main>\n'
 	printf '%s\n' "$post_content"
-	printf '%s\n' "$post_foot"
 	printf '</main>\n'
+	printf '%s\n' "$post_foot"
 	printf '</body>\n'
 	printf '</html>\n'
 }
@@ -195,9 +198,9 @@ gen_index() {
 		fi
 
 		# TODO: find a better way to do this
-		fmt="$(echo "$POST_LIST_FORMAT" | sed -e "s/%d/${post_date}/" -e "s,%t,${post_title},")" 
+		fmt="$(echo "$POST_LIST_FORMAT" | sed -e "s/%d/${post_date}/" -e "s,%t,${post_title}," -e "s,%l,${post_url},")"
 
-		printf '<li><a href="%s">%s</li>\n' "$post_url" "$fmt"
+		printf '<li>%s</li>\n' "$fmt"
 	done
 
 	printf '</ul>\n'
@@ -276,8 +279,8 @@ compile_posts() {
 		# generate html from markdown
 		post_html="$(lowdown -Thtml "$post")"
 
-		# generate info/footer
-		post_foot="$(gen_html_info "$post_md" "$post_date" "$post_modified")"
+		# generate footer
+		post_foot="$(gen_html_footer "$post_md" "$post_date" "$post_modified")"
 
 		# generate the post's html
 		gen_html_post "$post_title" "$post_html" "$post_foot" > "${post%%.*}.html"
