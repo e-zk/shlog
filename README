@@ -3,14 +3,14 @@ shlog
 a blog in /bin/sh.  
 
 +-------------------------------------------+
-| warn: this project is a work in progress. |
+| WARN: THIS PROJECT IS A WORK IN PROGRESS. |
 +-------------------------------------------+
 
 usage
 -----
 plaintext posts are .md files named in the format `YYYY-MM-DD-title.md` stored
 in the $POSTS_DIR. once converted to html these posts are named the same, but
-with a .html extension.
+with a .html extension ('2020-01-01-mypost.md' -> '2020-01-01-mypost.html').
 upon updating, the shlog script searches the $POSTS_DIR for any .md files that
 do not have a .html counterpart, and converts these posts to HTML.
 
@@ -32,11 +32,9 @@ depends
 config
 ------
 the config file is located at `${XDG_CONFIG_HOME}/shlog/shlog.conf`.  
-a default config is included as `shlog.conf.def`.
+a default/reference config is included as `shlog.conf.def`.
 
-TODO
-----
-* add info/footer
-	- plaintext link
-	- date posted
-	- last modified/last re-generated
+plans
+-----
+- idk tbh
+- make it usable
