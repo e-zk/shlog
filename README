@@ -40,6 +40,7 @@ when not given any arguments shlog defaults to [u|update].
 
 DEPENDS
 * /bin/sh
+* BSD `date` command
 * lowdown
 
 
@@ -50,5 +51,6 @@ a default/reference config is included as `shlog.conf.def`.
 
 PLANS
 - better config variable names
+- Linux support (due to dependency on BSD `date`)
 - idk tbh
 - make it usable
