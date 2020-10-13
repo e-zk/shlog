@@ -1,21 +1,34 @@
-shlog
-=====
-a blog in /bin/sh.  
+                                      shlog
+                               a blog in /bin/sh
+                   WARN: THIS PROJECT IS A WORK IN PROGRESS
 
-+-------------------------------------------+
-| WARN: THIS PROJECT IS A WORK IN PROGRESS. |
-+-------------------------------------------+
 
-usage
------
+USAGE
 plaintext posts are .md files named in the format `YYYY-MM-DD-title.md` stored
 in the $POSTS_DIR. once converted to html these posts are named the same, but
 with a .html extension ('2020-01-01-mypost.md' -> '2020-01-01-mypost.html').
 upon updating, the shlog script searches the $POSTS_DIR for any .md files that
 do not have a .html counterpart, and converts these posts to HTML.
 
-usage: shlog [i|index] [r|rss] [u|update]
+example $SITE_ROOT:
 
+        .                               # $SITE_ROOT
+        |- posts/                       # $POSTS_DIR
+        |  |- index.html                # list of posts in chronological order
+        |  |- 01-01-0001-post.md        # markdown post source
+        |  |- 01-01-0001-post.html      # 'compiled' HTML post source
+        |- html/                        # dir containing html
+        |  |- footer.html               # HTML added to the end of each post
+        |  |- head.html                 # HTML <head> added to every post
+        |  |- nav.html                  # HTML added to the start of each post
+        |  |- posts.html                # HTML added to $POSTS_DIR/index.html
+        |- style.css                    # style (not required)
+        |- index.html                   # index/homepage (not required)
+
+command-line usage:
+
+        shlog [i|index] [r|rss] [u|update]
+        
 i|index  : generate a posts index page which lists all posts and links to them
            (newest-first).
 r|rss    : generate/update the posts rss feed located at $RSS_FEED.
@@ -24,17 +37,18 @@ u|update : search $POSTS_DIR for .md files that have not been converted to html
 
 when not given any arguments shlog defaults to [u|update].
 
-depends
--------
-* /bin/sh  
-* lowdown  
 
-config
-------
-the config file is located at `${XDG_CONFIG_HOME}/shlog/shlog.conf`.  
+DEPENDS
+* /bin/sh
+* lowdown
+
+
+CONFIG
+the config file is located at `${XDG_CONFIG_HOME}/shlog/shlog.conf`.
 a default/reference config is included as `shlog.conf.def`.
 
-plans
------
+
+PLANS
+- better config variable names
 - idk tbh
 - make it usable
