@@ -49,6 +49,10 @@ the config file is located at `${XDG_CONFIG_HOME}/shlog/shlog.conf`.
 a default/reference config is included as `shlog.conf.def`.
 
 
+NON-GOALS
+- post tags/categories
+
+
 PLANS
 - better config variable names
 - Linux support (due to dependency on BSD `date`)
