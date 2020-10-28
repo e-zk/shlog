@@ -113,12 +113,14 @@ get_unpost_list() {
 
 # generate navgation/header html
 gen_html_nav() {
+	printf '<header>\n'
 	printf '<nav>\n'
 	printf '<p>\n'
 	printf '<a href="%s">%s</a>\n' "/" "$DOMAIN"
 	cat "$NAV_CONTENT"
 	printf '</p>\n'
 	printf '</nav>\n'
+	printf '</header>\n'
 }
 
 # generate html head
