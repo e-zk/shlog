@@ -1,60 +1,78 @@
-                                      shlog
-                               a blog in /bin/sh
-                   WARN: THIS PROJECT IS A WORK IN PROGRESS
+SHLOG(1)                                                                SHLOG(1)
+NAME
+    shlog - a static blog generator in /bin/sh (WIP)
 
+SYNOPSIS
+    shlog [subcommand]
 
-USAGE
-plaintext posts are .md files named in the format `YYYY-MM-DD-title.md` stored
-in the $POSTS_DIR. once converted to html these posts are named the same, but
-with a .html extension ('2020-01-01-mypost.md' -> '2020-01-01-mypost.html').
-upon updating, the shlog script searches the $POSTS_DIR for any .md files that
-do not have a .html counterpart, and converts these posts to HTML.
+DESCRIPTION
+    Generate simple static sites. shlog is geared towards blogs.
 
-example $SITE_ROOT:
+    The subcommands are as follows:
 
-        .                               # $SITE_ROOT
-        |- posts/                       # $POSTS_DIR
-        |  |- index.html                # list of posts in chronological order
-        |  |- 01-01-0001-post.md        # markdown post source
-        |  |- 01-01-0001-post.html      # 'compiled' HTML post source
-        |- html/                        # dir containing html
-        |  |- footer.html               # HTML added to the end of each post
-        |  |- head.html                 # HTML <head> added to every post
-        |  |- nav.html                  # HTML added to the start of each post
-        |  |- posts.html                # HTML added to $POSTS_DIR/index.html
-        |- style.css                    # style (not required)
-        |- index.html                   # index/homepage (not required)
+    i|index     Generate the post index page. This page lists all posts and
+                links to them.
 
-command-line usage:
+    r|rss       Generate the RSS feed. RSS feed location is configurable in the
+                config file.
 
-        shlog [i|index] [r|rss] [u|update]
-        
-i|index  : generate a posts index page which lists all posts and links to them
-           (newest-first).
-r|rss    : generate/update the posts rss feed located at $RSS_FEED.
-u|update : search $POSTS_DIR for .md files that have not been converted to html
-           and convert them.
+    u|update    Find articles that haven't been converted to HTML and
+                convert them.   
 
-when not given any arguments shlog defaults to [u|update].
+    shlog defaults to u/update if no arguments are given.
 
+EXAMPLE USAGE
+    To use shlog setup your site root as so:
 
-DEPENDS
-* /bin/sh
-* BSD `date` command
-* lowdown
+        .                           # $SITE_ROOT
+        |- posts/                   # $POSTS_DIR
+        |  |- index.html            # list of posts in chronological order
+        |  |- 01-01-0001-post.md    # markdown post source
+        |  |- 01-01-0001-post.html  # 'compiled' HTML post source
+        |- html/                    # dir containing html
+        |  |- footer.html           # HTML added to the end of each post
+        |  |- head.html             # HTML <head> added to every post
+        |  |- nav.html              # HTML added to the start of each post
+        |  |- posts.html            # HTML added to $POSTS_DIR/index.html
+        |- style.css                # style (not required)
+        |- index.html               # index/homepage (not required)
 
+    After running `shlog update` Markdown in /posts/ following the filename
+    format DD-MM-YYYY-shortitle.md will be run through lowdown and converted
+    into HTML. Additional HTML will be added from the html/head.html,
+    html/nav.html and html/footer.html.
 
-CONFIG
-the config file is located at `${XDG_CONFIG_HOME}/shlog/shlog.conf`.
-a default/reference config is included as `shlog.conf.def`.
+    To generate a post index file (located at /posts/index.html) which lists
+    posts in order of the date in it's filename (most recent first) and links
+    to them, run `shlog index`.
 
+DEPENDENCIES
+    shlog depends on the following programs:
+
+    /bin/sh     Obviously.
+
+    BSD date    Currently the BSD date syntax is used for converting
+                timestamps.
+
+    lowdown     Markdown to HTML converter. (https://kristaps.bsd.lv/lowdown/).
+
+GOALS
+    - Be a shell script.
+    - Be fast.
 
 NON-GOALS
-- post tags/categories
+    - JavaScript (though it should be easy to add it yourself)
+    - Post tags/categories
 
+CONFIGURATION
+    The main configuration file is located at:
+        ${XDG_CONFIG_HOME}/shlog/shlog.conf.
+    This config file is just a regular shell script that the shlog script
+    sources on startup.
+
+    A default/reference config is included in shlog.conf.def.
 
 PLANS
-- better config variable names
-- Linux support (due to dependency on BSD `date`)
-- idk tbh
-- make it usable
+    - Better config variable names
+    - Linux support (due to dependency on BSD `date` - only supports *BSD)
+    - Make usable
