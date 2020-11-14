@@ -73,7 +73,7 @@ log() {
 # $1 - markdown file
 get_md_title() {
 	md_file="$1"
-	head -n 1 "$md_file" | sed -e 's/^#\ \(.*\)$/\1/g'
+	head -n 1 "$md_file" | sed -e 's/^#\ \(.*\)$/\1/g' -e 's/\`//g'
 }
 
 # get date from post filename
@@ -115,10 +115,8 @@ get_unpost_list() {
 gen_html_nav() {
 	printf '<header>\n'
 	printf '<nav>\n'
-	printf '<p>\n'
 	printf '<a href="%s">%s</a>\n' "/" "$DOMAIN"
 	cat "$NAV_CONTENT"
-	printf '</p>\n'
 	printf '</nav>\n'
 	printf '</header>\n'
 }
@@ -144,11 +142,10 @@ gen_html_footer() {
 	post_modified="$3"
 	
 	printf '<footer>\n'
-	printf '<p>\n'
-	printf '<a href="%s">view plaintext</a><br/>\n' "$(bname "$post_pt")"
-	printf 'created:%s modified:%s<br/>\n' "$post_date" "$post_modified"
+	printf 'Posted: %s<br>\n' "$post_date"
+	printf 'Modified: %s<br>\n' "$post_modified"
+	printf 'Plaintext: <a href=\"%s\">View</a>\n' "$(bname "$post_pt")"
 	cat "$FOOTER_CONTENT"
-	printf '</p>\n'
 	printf '</footer>\n'
 }
 
@@ -211,7 +208,6 @@ gen_index() {
 	printf '</html>\n'
 }
 
-
 # generate rss feed
 gen_rss() {
 	printf '<rss version="2.0" xml:base="%s">\n' "${WWW}"
@@ -247,6 +243,22 @@ gen_rss() {
 	printf '</rss>\n'
 }
 
+# generate a blank page
+# $1 - page title
+gen_blank_page() {
+	page_title="$1"
+
+	printf '<!DOCTYPE html>\n'
+	printf '<html>\n'
+	gen_html_head "${page_title} - ${WWW_TITLE}"
+	printf '<body>\n'
+	gen_html_nav
+	printf '<main>\n'
+	printf '</main>\n'
+	printf '</body>\n'
+	printf '</html>\n'
+}
+
 # compile all .md files without .html couterparts
 compile_posts() {
 	posts="$(get_unpost_list)"
@@ -259,7 +271,7 @@ compile_posts() {
 
 	# for each .md file without a .html counterpart...
 	for post in $posts; do
-	
+
 		if [ -z "$post" ]; then
 			continue
 		fi
