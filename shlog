@@ -44,7 +44,7 @@ date_to_rfc2822() {
 	# "+%a, %d %b %Y %T %z"
 
 	# if on Linux, use GNU date syntax
-	if [ "$(uname)" == "Linux" ]; then
+	if [ "$(uname)" = "Linux" ]; then
 		date -d "$date" "$rfc2822"
 	else
 		date -j -f "$format" "$date" "$rfc2822"
