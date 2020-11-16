@@ -21,7 +21,7 @@ DESCRIPTION
 
     shlog defaults to u/update if no arguments are given.
 
-EXAMPLE USAGE
+EXAMPLE
     To use shlog setup your site root as so:
 
         .                           # $SITE_ROOT
@@ -54,15 +54,17 @@ DEPENDENCIES
     BSD date    Currently the BSD date syntax is used for converting
                 timestamps.
 
-    lowdown     Markdown to HTML converter. (https://kristaps.bsd.lv/lowdown/).
+    lowdown     Markdown to HTML converter (https://kristaps.bsd.lv/lowdown/).
 
 GOALS
     - Be a shell script.
+    - Minimum external dependencies.
     - Be fast.
+    - Be cross-platform (POSIX?).
 
 NON-GOALS
-    - JavaScript (though it should be easy to add it yourself)
-    - Post tags/categories
+    - JavaScript (though it should be easy to add it yourself).
+    - Post tags/categories.
 
 CONFIGURATION
     The main configuration file is located at:
@@ -73,6 +75,7 @@ CONFIGURATION
     A default/reference config is included in shlog.conf.def.
 
 PLANS
-    - Better config variable names
-    - Linux support (due to dependency on BSD `date` - only supports *BSD)
-    - Make usable
+    - Better configuration syntax.
+    - Better docs.
+    - L̶i̶n̶u̶x̶ ̶s̶u̶p̶p̶o̶r̶t̶ ̶(̶d̶u̶e̶ t̶o̶ ̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶ ̶o̶n̶ ̶B̶S̶D̶ ̶`̶d̶a̶t̶e̶`̶ ̶-̶ ̶o̶n̶l̶y̶ ̶s̶u̶p̶p̶o̶r̶t̶s̶ ̶*̶B̶S̶D̶)̶ Done.
+    - Make usable.
