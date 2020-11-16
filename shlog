@@ -25,23 +25,30 @@ bname() {
 # is 
 is_yes() {
 	case "$1" in
-		y|Y*) return 0 ;;
-		n|N*) return 1 ;;
+		y|Y*) return 0   ;;
+		n|N*) return 127 ;;
 	esac
 	return 1
 }
 
 # convert input date to RFC2822
 # time and tz are set to 00:00:00 +0000
-# (only works with bsd date)
 # $1 - input date
 # $2 - input date format
 date_to_rfc2822() {
 	date="$1"
 	format="$2"
-	# for full conversion
-	#date -j -f "${format}" "${date}" "+%a, %d %b %Y %T %z"
-	date -j -f "${format}" "${date}" "+%a, %d %b %Y 00:00:00 +0000"
+	rfc2822="+a, %d %b %Y 00:00:00 +0000"
+
+	# note: for full conversion (time + tz) rfc2822 with:
+	# "+%a, %d %b %Y %T %z"
+
+	# if on Linux, use GNU date syntax
+	if [ "$(uname)" == "Linux" ]; then
+		date -d "$date" "$rfc2822"
+	else
+		date -j -f "$format" "$date" "$rfc2822"
+	fi
 }
 
 # cross-platform reverse cat
@@ -55,7 +62,7 @@ reverse() {
 
 # log
 # $1 - message
-# $2 - (optional) log label
+# $2 - (optional) log 'label'
 log() {
 	message="$1"
 	level="$2"
@@ -68,15 +75,16 @@ log() {
 	printf "[%s] %s\\n" "$level" "$message"
 }
 
-# get markdown article title by extracting the first h1
-# requires the first line of all post .md files to be the h1
+# get markdown article title by extracting the first h1.
+# requires the first line of the markdown file to be the h1.
 # $1 - markdown file
 get_md_title() {
 	md_file="$1"
 	head -n 1 "$md_file" | sed -e 's/^#\ \(.*\)$/\1/g' -e 's/\`//g'
 }
 
-# get date from post filename
+# get date from post filename.
+# requires filename to be YYYY-MM-DD-blahblah-blah.md
 # $1 - markdown file
 get_post_date() {
 	md_filename="$(bname "$1")"
@@ -194,6 +202,10 @@ gen_index() {
 			post_url="/posts/${post_bname%%.*}"
 		else
 			post_url="${WWW}/posts/${post_bname%%.*}"
+		fi
+
+		if is_yes "$HTML_LINKS"; then
+			post_url="${post_url}.html"
 		fi
 
 		# TODO: find a better way to do this
@@ -319,6 +331,7 @@ main() {
 		""|u|update) compile_posts                         ;;
 		i|index)     gen_index > "$POSTS_INDEX"            ;;
 		r|rss)       gen_rss > "$RSS_FEED"                 ;;
+		p|page)      gen_page "$2" > "$3";;
 		*)           log "unsupported command $1" "error"  ;;
 	esac
 }
