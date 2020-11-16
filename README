@@ -51,14 +51,11 @@ DEPENDENCIES
 
     /bin/sh     Obviously.
 
-    BSD date    Currently the BSD date syntax is used for converting
-                timestamps.
-
     lowdown     Markdown to HTML converter (https://kristaps.bsd.lv/lowdown/).
 
 GOALS
     - Be a shell script.
-    - Minimum external dependencies.
+    - Minimal external dependencies.
     - Be fast.
     - Be cross-platform (POSIX?).
 
@@ -77,5 +74,4 @@ CONFIGURATION
 PLANS
     - Better configuration syntax.
     - Better docs.
-    - L̶i̶n̶u̶x̶ ̶s̶u̶p̶p̶o̶r̶t̶ ̶(̶d̶u̶e̶ t̶o̶ ̶d̶e̶p̶e̶n̶d̶e̶n̶c̶y̶ ̶o̶n̶ ̶B̶S̶D̶ ̶`̶d̶a̶t̶e̶`̶ ̶-̶ ̶o̶n̶l̶y̶ ̶s̶u̶p̶p̶o̶r̶t̶s̶ ̶*̶B̶S̶D̶)̶ Done.
-    - Make usable.
+    - Better usablity.
