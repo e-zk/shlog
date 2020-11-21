@@ -8,6 +8,7 @@ shlog - shell blog
 usage: shlog [i|index] [r|rss] [u|update]
 
 	i|index
+	p|page [file] [title] [output]
 	r|rss
 	u|update
 EOF
@@ -28,7 +29,7 @@ is_yes() {
 		y|Y*) return 0   ;;
 		n|N*) return 127 ;;
 	esac
-	return 1
+	return 127
 }
 
 # convert input date to RFC2822
@@ -40,7 +41,7 @@ date_to_rfc2822() {
 	format="$2"
 	rfc2822="+a, %d %b %Y 00:00:00 +0000"
 
-	# note: for full conversion (time + tz) rfc2822 with:
+	# note: for full conversion (time + tz) replace $rfc2822 with:
 	# "+%a, %d %b %Y %T %z"
 
 	# if on Linux, use GNU date syntax
@@ -65,14 +66,26 @@ reverse() {
 # $2 - (optional) log 'label'
 log() {
 	message="$1"
-	level="$2"
+	label="$2"
 
-	if [ -z "$level" ]; then
-	        printf "%s\\n" "$message"
+	if [ -z "$label" ]; then
+	        printf "%s: %s\\n" "$(bname $0)" "$message"
 	        return
 	fi
 
-	printf "[%s] %s\\n" "$level" "$message"
+	printf "%s: %s: %s\\n" "$(bname $0)" "$label" "$message"
+}
+
+#
+die() {
+	message="$1"
+
+	if [ -n "$message" ]; then
+		log "$message" "error"
+	fi
+
+	printf 'exiting.\\n'
+	exit 1
 }
 
 # get markdown article title by extracting the first h1.
@@ -94,7 +107,7 @@ get_post_date() {
 # get list of all posts
 get_post_list() {
 	posts=''
-	for post in ${POSTS_DIR}/*.html; do
+	for post in ${posts_dir}/*.html; do
 		if [ "$(bname "$post")" = "index.html" ]; then
 			continue
 		fi
@@ -106,7 +119,7 @@ get_post_list() {
 # get list of unposted posts (.md files without their .html counterparts)
 get_unpost_list() {
 	posts=''
-	for post in ${POSTS_DIR}/*.md; do
+	for post in ${posts_dir}/*.md; do
 		# if the .html exists, it has already been compiled
 		if [ -f "${post%%.*}.html" ]; then
 			continue
@@ -123,8 +136,14 @@ get_unpost_list() {
 gen_html_nav() {
 	printf '<header>\n'
 	printf '<nav>\n'
-	printf '<a href="%s">%s</a>\n' "/" "$DOMAIN"
-	cat "$NAV_CONTENT"
+	printf '<a href="%s">%s</a>\n' "/" "$fqdn"
+	if [ -n "$nav_content" ]; then
+		if [ -f "$nav_content" ]; then
+			cat "$nav_content"
+		else
+			die "nav_content file `${nav_content}' does not exist."
+		fi
+	fi
 	printf '</nav>\n'
 	printf '</header>\n'
 }
@@ -135,7 +154,13 @@ gen_html_head() {
 	html_title="$1"
 
 	printf '<head>\n'
-	cat "$HEAD_CONTENT"
+	if [ -n "$head_content" ]; then
+		if [ -f "$head_content" ]; then
+			cat "$head_content"
+		else
+			die "head_content file `${head_content}' does not exist."
+		fi
+	fi
 	printf '<title>%s</title>' "$html_title"
 	printf '</head>\n'
 }
@@ -168,7 +193,7 @@ gen_html_post() {
 
 	printf '<!DOCTYPE html>\n'
 	printf '<html>\n'
-	gen_html_head "${post_title} - ${WWW_TITLE}"
+	gen_html_head "${post_title} - ${site_title}"
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
@@ -183,11 +208,19 @@ gen_html_post() {
 gen_index() {
 	printf '<!DOCTYPE html>\n'
 	printf '<html>\n'
-	gen_html_head "${WWW_TITLE}"
+	gen_html_head "${site_title}"
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
-	cat "$POSTINDEX_CONTENT"
+
+	if [ -n "$postindex_content" ]; then
+		if [ -f "$postindex_content" ]; then
+			cat "$postindex_content"
+		else
+			die "postindex_content file `${postindex_content}' does not exist."
+		fi
+	fi
+
 	printf '<ul class="postslist">\n'
 
 	# add a <li> for each post
@@ -198,18 +231,23 @@ gen_index() {
 		post_bname="$(bname "$post")"
 
 		# use full paths, or relative paths ?
-		if is_yes "$REL_PATHS"; then
+		if is_yes "$use_relative_paths"; then
 			post_url="/posts/${post_bname%%.*}"
 		else
-			post_url="${WWW}/posts/${post_bname%%.*}"
+			post_url="${base_url}/posts/${post_bname%%.*}"
 		fi
 
-		if is_yes "$HTML_LINKS"; then
+		# add .html to the end of links ?
+		if is_yes "$add_html_to_links"; then
 			post_url="${post_url}.html"
 		fi
 
+		# construct 
 		# TODO: find a better way to do this
-		fmt="$(echo "$POST_LIST_FORMAT" | sed -e "s/%d/${post_date}/" -e "s,%t,${post_title}," -e "s,%l,${post_url},")"
+		fmt="$(echo "$post_list_format" | sed \
+			-e "s/%d/${post_date}/g" \
+			-e "s/%t/${post_title}/g" \
+			-e "s,%l,${post_url},g")"
 
 		printf '<li>%s</li>\n' "$fmt"
 	done
@@ -222,11 +260,11 @@ gen_index() {
 
 # generate rss feed
 gen_rss() {
-	printf '<rss version="2.0" xml:base="%s">\n' "${WWW}"
+	printf '<rss version="2.0" xml:base="%s">\n' "${base_url}"
 	printf '<channel>\n'
-	printf '<title>%s</title>\n' "${RSS_TITLE}"
+	printf '<title>%s</title>\n' "${rss_title}"
 	printf '<description/>\n'
-	printf '<link>%s</link>\n' "${RSS_LINK}"
+	printf '<link>%s</link>\n' "${rss_link}"
 
 	# add an <item> for each post
 	for post in $(get_post_list); do
@@ -236,10 +274,11 @@ gen_rss() {
 		post_bname="$(bname "$post")"
 
 		printf '<item>\n'
-		printf '<link>%s</link>\n'       "${WWW}/posts/${post_bname%%.*}"
+		printf '<link>%s</link>\n'       "${base_url}/posts/${post_bname%%.*}"
 		printf '<title>%s</title>\n'     "$post_title"
 
-		if is_yes "$RSS_INCLUDE_HTML"; then
+		# include post content ?
+		if is_yes "$rss_include_html"; then
 			post_html="$(lowdown -Thtml "$post_md")"
 
 			printf '<description>\n'
@@ -257,15 +296,18 @@ gen_rss() {
 
 # generate a blank page
 # $1 - page title
-gen_blank_page() {
+# $2 - page file
+gen_page() {
 	page_title="$1"
+	page_file="$2"
 
 	printf '<!DOCTYPE html>\n'
 	printf '<html>\n'
-	gen_html_head "${page_title} - ${WWW_TITLE}"
+	gen_html_head "${page_title} - ${site_title}"
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
+	lowdown -Thtml "$page_file"
 	printf '</main>\n'
 	printf '</body>\n'
 	printf '</html>\n'
@@ -329,9 +371,9 @@ main() {
 	case "$1" in
 		h|-h|help)   usage                                 ;;
 		""|u|update) compile_posts                         ;;
-		i|index)     gen_index > "$POSTS_INDEX"            ;;
-		r|rss)       gen_rss > "$RSS_FEED"                 ;;
-		p|page)      gen_page "$2" > "$3";;
+		i|index)     gen_index > "$posts_index"            ;;
+		r|rss)       gen_rss > "$rss_feed"                 ;;
+		p|page)      gen_page "$3" "$2" > "$4"             ;;
 		*)           log "unsupported command $1" "error"  ;;
 	esac
 }
