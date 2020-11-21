@@ -141,7 +141,7 @@ gen_html_nav() {
 		if [ -f "$nav_content" ]; then
 			cat "$nav_content"
 		else
-			die "nav_content file `${nav_content}' does not exist."
+			die "nav_content file '${nav_content}' does not exist."
 		fi
 	fi
 	printf '</nav>\n'
@@ -158,7 +158,7 @@ gen_html_head() {
 		if [ -f "$head_content" ]; then
 			cat "$head_content"
 		else
-			die "head_content file `${head_content}' does not exist."
+			die "head_content file '${head_content}' does not exist."
 		fi
 	fi
 	printf '<title>%s</title>' "$html_title"
@@ -217,7 +217,7 @@ gen_index() {
 		if [ -f "$postindex_content" ]; then
 			cat "$postindex_content"
 		else
-			die "postindex_content file `${postindex_content}' does not exist."
+			die "postindex_content file '${postindex_content}' does not exist."
 		fi
 	fi
 
@@ -246,7 +246,7 @@ gen_index() {
 		# TODO: find a better way to do this
 		fmt="$(echo "$post_list_format" | sed \
 			-e "s/%d/${post_date}/g" \
-			-e "s/%t/${post_title}/g" \
+			-e "s,%t,${post_title},g" \
 			-e "s,%l,${post_url},g")"
 
 		printf '<li>%s</li>\n' "$fmt"
@@ -357,14 +357,12 @@ compile_posts() {
 }
 
 main() {
-
 	# load config
 	DEF_CONFIG="${XDG_CONFIG_HOME:-${HOME}/.config}/shlog/shlog.conf"
 	if [ -f "${DEF_CONFIG}" ]; then
 		. "${DEF_CONFIG}"
 	else
-		log "cannot load config. exiting" "error"
-		exit 1
+		die "cannot load config."
 	fi
 
 	# 
