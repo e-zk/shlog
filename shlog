@@ -69,11 +69,11 @@ log() {
 	label="$2"
 
 	if [ -z "$label" ]; then
-	        printf "%s: %s\\n" "$(bname $0)" "$message"
+	        printf "%s: %s\\n" "$(bname $0)" "$message" >&1
 	        return
 	fi
 
-	printf "%s: %s: %s\\n" "$(bname $0)" "$label" "$message"
+	printf "%s: %s: %s\\n" "$(bname $0)" "$label" "$message" >&1
 }
 
 #
@@ -81,10 +81,10 @@ die() {
 	message="$1"
 
 	if [ -n "$message" ]; then
-		log "$message" "error"
+		log "$message" "error" >&2
 	fi
 
-	printf 'exiting.\\n'
+	printf 'exiting.\n' >&2
 	exit 1
 }
 
@@ -107,7 +107,7 @@ get_post_date() {
 # get list of all posts
 get_post_list() {
 	posts=''
-	for post in ${posts_dir}/*.html; do
+	for post in ${site_root}/${posts_dir}/*.html; do
 		if [ "$(bname "$post")" = "index.html" ]; then
 			continue
 		fi
@@ -119,7 +119,7 @@ get_post_list() {
 # get list of unposted posts (.md files without their .html counterparts)
 get_unpost_list() {
 	posts=''
-	for post in ${posts_dir}/*.md; do
+	for post in ${site_root}/${posts_dir}/*.md; do
 		# if the .html exists, it has already been compiled
 		if [ -f "${post%%.*}.html" ]; then
 			continue
@@ -150,8 +150,10 @@ gen_html_nav() {
 
 # generate html head
 # $1 - html title
+# $2 - canonical url of page (optional, only needed for opengraph)
 gen_html_head() {
 	html_title="$1"
+	page_url="$2"
 
 	printf '<head>\n'
 	if [ -n "$head_content" ]; then
@@ -161,7 +163,12 @@ gen_html_head() {
 			die "head_content file '${head_content}' does not exist."
 		fi
 	fi
-	printf '<title>%s</title>' "$html_title"
+	printf '<title>%s - %s</title>\n' "$html_title" "$site_title"
+	if is_yes "$add_og_tags"; then
+		printf '<meta property="og:title" content="%s" />\n' "$html_title"
+		printf '<meta property="og:url" content="%s/%s" />\n' "$base_url" "$page_url"
+		printf '<meta property="og:type" content="article" />\n'
+	fi
 	printf '</head>\n'
 }
 
@@ -178,22 +185,30 @@ gen_html_footer() {
 	printf 'Posted: %s<br>\n' "$post_date"
 	printf 'Modified: %s<br>\n' "$post_modified"
 	printf 'Plaintext: <a href=\"%s\">View</a>\n' "$(bname "$post_pt")"
-	cat "$FOOTER_CONTENT"
-	printf '</footer>\n'
+	cat "$footer_content"
+	printf '\n</footer>\n'
 }
 
 # generate post's html
-# $1 - post title
-# $2 - post html content
-# $3 - post info/footer (optional)
+# $1 - post 
+# $2 - post title
+# $3 - post html content
+# $4 - post info/footer (optional)
 gen_html_post() {
-	post_title="$1"
-	post_content="$2"
-	post_foot="${3:-''}"
+	post="$(bname "$1")"
+	post_title="$2"
+	post_content="$3"
+	post_foot="${4:-''}"
+
+	post_url="${posts_dir}/${post%%.*}"
+
+	if is_yes "$add_html_to_links"; then
+		post_url="${post_url}.html"
+	fi
 
 	printf '<!DOCTYPE html>\n'
 	printf '<html>\n'
-	gen_html_head "${post_title} - ${site_title}"
+	gen_html_head "${post_title}" "${post_url}"
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
@@ -232,9 +247,9 @@ gen_index() {
 
 		# use full paths, or relative paths ?
 		if is_yes "$use_relative_paths"; then
-			post_url="/posts/${post_bname%%.*}"
+			post_url="/${posts_dir}/${post_bname%%.*}"
 		else
-			post_url="${base_url}/posts/${post_bname%%.*}"
+			post_url="${base_url}/${posts_dir}/${post_bname%%.*}"
 		fi
 
 		# add .html to the end of links ?
@@ -274,7 +289,7 @@ gen_rss() {
 		post_bname="$(bname "$post")"
 
 		printf '<item>\n'
-		printf '<link>%s</link>\n'       "${base_url}/posts/${post_bname%%.*}"
+		printf '<link>%s/%s/%s</link>\n' "${base_url}" "$posts_dir" "${post_bname%%.*}"
 		printf '<title>%s</title>\n'     "$post_title"
 
 		# include post content ?
@@ -325,7 +340,6 @@ compile_posts() {
 
 	# for each .md file without a .html counterpart...
 	for post in $posts; do
-
 		if [ -z "$post" ]; then
 			continue
 		fi
@@ -351,7 +365,7 @@ compile_posts() {
 		post_foot="$(gen_html_footer "$post_md" "$post_date" "$post_modified")"
 
 		# generate the post's html
-		gen_html_post "$post_title" "$post_html" "$post_foot" > "${post%%.*}.html"
+		gen_html_post "$post" "$post_title" "$post_html" "$post_foot" > "${post%%.*}.html"
 	done
 
 }
