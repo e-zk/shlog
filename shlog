@@ -149,7 +149,7 @@ gen_html_nav() {
 }
 
 # generate html head
-# $1 - html title
+# $1 - html title (optional)
 # $2 - canonical url of page (optional, only needed for opengraph)
 gen_html_head() {
 	html_title="$1"
@@ -163,7 +163,11 @@ gen_html_head() {
 			die "head_content file '${head_content}' does not exist."
 		fi
 	fi
-	printf '<title>%s - %s</title>\n' "$html_title" "$site_title"
+	if [ -n "$html_title" ]; then
+		printf '<title>%s - %s</title>\n' "$html_title" "$site_title"
+	else
+		printf '<title>%s</title>\n' "$site_title"
+	fi
 	if is_yes "$add_og_tags"; then
 		printf '<meta property="og:title" content="%s" />\n' "$html_title"
 		printf '<meta property="og:url" content="%s/%s" />\n' "$base_url" "$page_url"
@@ -223,7 +227,7 @@ gen_html_post() {
 gen_index() {
 	printf '<!DOCTYPE html>\n'
 	printf '<html>\n'
-	gen_html_head "${site_title}"
+	gen_html_head
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
@@ -294,7 +298,7 @@ gen_rss() {
 
 		# include post content ?
 		if is_yes "$rss_include_html"; then
-			post_html="$(lowdown -Thtml "$post_md")"
+			post_html="$(lowdown -Thtml "$lowdown_opts" "$post_md")"
 
 			printf '<description>\n'
 			printf '%s\n' "$post_html"
@@ -318,11 +322,11 @@ gen_page() {
 
 	printf '<!DOCTYPE html>\n'
 	printf '<html>\n'
-	gen_html_head "${page_title} - ${site_title}"
+	gen_html_head "${page_title}"
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
-	lowdown -Thtml "$page_file"
+	lowdown -Thtml ${lowdown_opts} "$page_file"
 	printf '</main>\n'
 	printf '</body>\n'
 	printf '</html>\n'
@@ -359,7 +363,7 @@ compile_posts() {
 		post_title="$(get_md_title "$post_md")"
 
 		# generate html from markdown
-		post_html="$(lowdown -Thtml "$post")"
+		post_html="$(lowdown -Thtml "$lowdown_opts" "$post")"
 
 		# generate footer
 		post_foot="$(gen_html_footer "$post_md" "$post_date" "$post_modified")"
