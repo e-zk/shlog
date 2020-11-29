@@ -13,11 +13,14 @@ site_title="example's website"
 # root site source
 site_root=${HOME}/src/blog
 
-# directory containing posts
-posts_dir=${site_root}/posts
+# directory in the site_root containing posts
+posts_dir=posts
 
 # post list/index file location
 posts_index=${posts_dir}/index.html
+
+# pass additional options to lowdown
+lowdown_opts=
 
 
 #           #
@@ -64,6 +67,10 @@ head_content=${html_dir}/head.html
 # content to add to the header of each page.
 # leave blank to add nothing.
 nav_content=${html_dir}/nav.html
+
+# content to add to the end of each post
+# after the metadata
+footer_content=${html_dir}/footer.html
 
 # content to add to the beginning of the post index.
 # leave blank to add nothing.
