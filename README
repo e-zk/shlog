@@ -27,8 +27,8 @@ EXAMPLE
         .                           # $SITE_ROOT
         |- posts/                   # $POSTS_DIR
         |  |- index.html            # list of posts in chronological order
-        |  |- 01-01-0001-post.md    # markdown post source
-        |  |- 01-01-0001-post.html  # 'compiled' HTML post source
+        |  |- 2020-09-08-post.md    # markdown post source
+        |  |- 2020-09-08-post.html  # 'compiled' HTML post source
         |- html/                    # dir containing html
         |  |- footer.html           # HTML added to the end of each post
         |  |- head.html             # HTML <head> added to every post
