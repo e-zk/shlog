@@ -34,7 +34,7 @@ use_relative_paths=y
 add_html_to_links=y
 
 # add OpenGraph tags to posts
-#add_og_tags=y
+add_og_tags=n
 
 
 #     #
