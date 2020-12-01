@@ -1,6 +1,7 @@
 SHLOG(1)                                                                SHLOG(1)
 NAME
-    shlog - a static blog generator in /bin/sh (WIP)
+    shlog - a WIP static blog generator in /bin/sh
+    note: this is a hobby project
 
 SYNOPSIS
     shlog [subcommand]
