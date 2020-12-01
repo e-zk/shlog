@@ -14,6 +14,11 @@ usage: shlog [i|index] [r|rss] [u|update]
 EOF
 }
 
+html_safe() {
+	echo "$1" | sed -e 's/&/&amp;/g' \
+	-e 's/\ /%20/g'
+}
+
 # basename implementation
 # (from pure-sh-bible)
 bname() {
@@ -183,32 +188,43 @@ gen_html_head() {
 }
 
 # generate footer
-# $1 - post plaintext link
-# $2 - date posted
-# $3 - post last modified
+# $1 - page plaintext link (optional)
 gen_html_footer() {
-	post_pt="$1"
-	post_date="$2"
-	post_modified="$3"
-	
+	page_pt="$1"
+
 	printf '<footer>\n'
-	printf 'Posted: %s<br>\n' "$post_date"
-	printf 'Modified: %s<br>\n' "$post_modified"
-	printf 'Plaintext: <a href=\"%s\">View</a>\n' "$(bname "$post_pt")"
+	if [ -n "$page_pt" ]; then
+		printf 'View this page in <a href=\"%s\">plaintext.</a>\n' "$(bname "$page_pt")"
+	fi
 	cat "$footer_content"
 	printf '\n</footer>\n'
+}
+
+# generate post info
+# $1 - date posted
+# $2 - post last modified
+gen_html_postinfo() {
+	post_date="$1"
+	post_modified="$2"
+
+	printf '<p class="info">\n'
+	printf 'Posted: %s<br>\n' "$post_date"
+	printf 'Modified: %s<br>\n' "$post_modified"
+	printf '</p>\n'
 }
 
 # generate post's html
 # $1 - post 
 # $2 - post title
 # $3 - post html content
-# $4 - post info/footer (optional)
+# $4 - post footer
+# $5 - post info (optional)
 gen_html_post() {
 	post="$(bname "$1")"
 	post_title="$2"
 	post_content="$3"
-	post_foot="${4:-''}"
+	post_foot="${4}"
+	post_info="${5:-''}"
 
 	post_url="${posts_dir}/${post%%.*}"
 
@@ -222,6 +238,8 @@ gen_html_post() {
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
+	printf '<h1 id="%s">%s</h1>\n' "$(html_safe "$post_title")" "$post_title" 
+	printf '%s\n' "$post_info"
 	printf '%s\n' "$post_content"
 	printf '</main>\n'
 	printf '%s\n' "$post_foot"
@@ -304,7 +322,6 @@ gen_rss() {
 
 		# include post content ?
 		if is_yes "$rss_include_html"; then
-			#post_html="$(lowdown ${lowdown_opts} -Thtml "$post_md")"
 			post_html="$(run_lowdown "$post")"
 
 			printf '<description>\n'
@@ -326,6 +343,7 @@ gen_rss() {
 gen_page() {
 	page_title="$1"
 	page_file="$2"
+	page_pt="$(bname "$page_file")"
 
 	printf '<!DOCTYPE html>\n'
 	printf '<html>\n'
@@ -333,9 +351,9 @@ gen_page() {
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
-	#lowdown -Thtml "${lowdown_opts}" "$page_file"
 	run_lowdown "$page_file"
 	printf '</main>\n'
+	gen_html_footer "$page_pt"
 	printf '</body>\n'
 	printf '</html>\n'
 }
@@ -371,14 +389,16 @@ compile_posts() {
 		post_title="$(get_md_title "$post_md")"
 
 		# generate html from markdown
-		#post_html="$(lowdown ${lowdown_opts} -Thtml "$post")"
-		post_html="$(run_lowdown "$post")"
+		post_html="$(run_lowdown "$post" | sed '/^<h1\ /d')"
 
 		# generate footer
-		post_foot="$(gen_html_footer "$post_md" "$post_date" "$post_modified")"
+		post_foot="$(gen_html_footer "$post_md")"
+
+		# generate info
+		post_info="$(gen_html_postinfo "$post_date" "$post_modified")"
 
 		# generate the post's html
-		gen_html_post "$post" "$post_title" "$post_html" "$post_foot" > "${post%%.*}.html"
+		gen_html_post "$post" "$post_title" "$post_html" "$post_foot" "$post_info" > "${post%%.*}.html"
 	done
 
 }
