@@ -23,13 +23,19 @@ bname() {
 	printf '%s\n' "${dir:-/}"
 }
 
-# is 
+# is y/n?
+# $1 - char
 is_yes() {
-	case "$1" in
-		y|Y*) return 0   ;;
-		n|N*) return 127 ;;
-	esac
-	return 127
+	case "$1" in [yY]) return 0; esac; return 1
+}
+
+# run lowdown
+# $1 - input file
+run_lowdown() {
+	file="$1"
+	# we require this to be globbed
+	# shellcheck disable=SC2086
+	lowdown ${lowdown_opts} -Thtml "$file"
 }
 
 # convert input date to RFC2822
@@ -41,7 +47,7 @@ date_to_rfc2822() {
 	format="$2"
 	rfc2822="+a, %d %b %Y 00:00:00 +0000"
 
-	# note: for full conversion (time + tz) replace $rfc2822 with:
+	# for full conversion (time + tz) replace $rfc2822 with:
 	# "+%a, %d %b %Y %T %z"
 
 	# if on Linux, use GNU date syntax
@@ -69,11 +75,11 @@ log() {
 	label="$2"
 
 	if [ -z "$label" ]; then
-	        printf "%s: %s\\n" "$(bname $0)" "$message" >&1
+	        printf "%s: %s\\n" "$(bname "$0")" "$message" >&1
 	        return
 	fi
 
-	printf "%s: %s: %s\\n" "$(bname $0)" "$label" "$message" >&1
+	printf "%s: %s: %s\\n" "$(bname "$0")" "$label" "$message" >&1
 }
 
 #
@@ -298,7 +304,8 @@ gen_rss() {
 
 		# include post content ?
 		if is_yes "$rss_include_html"; then
-			post_html="$(lowdown -Thtml "$lowdown_opts" "$post_md")"
+			#post_html="$(lowdown ${lowdown_opts} -Thtml "$post_md")"
+			post_html="$(run_lowdown "$post")"
 
 			printf '<description>\n'
 			printf '%s\n' "$post_html"
@@ -326,7 +333,8 @@ gen_page() {
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
-	lowdown -Thtml ${lowdown_opts} "$page_file"
+	#lowdown -Thtml "${lowdown_opts}" "$page_file"
+	run_lowdown "$page_file"
 	printf '</main>\n'
 	printf '</body>\n'
 	printf '</html>\n'
@@ -363,7 +371,8 @@ compile_posts() {
 		post_title="$(get_md_title "$post_md")"
 
 		# generate html from markdown
-		post_html="$(lowdown -Thtml "$lowdown_opts" "$post")"
+		#post_html="$(lowdown ${lowdown_opts} -Thtml "$post")"
+		post_html="$(run_lowdown "$post")"
 
 		# generate footer
 		post_foot="$(gen_html_footer "$post_md" "$post_date" "$post_modified")"
@@ -378,6 +387,7 @@ main() {
 	# load config
 	DEF_CONFIG="${XDG_CONFIG_HOME:-${HOME}/.config}/shlog/shlog.conf"
 	if [ -f "${DEF_CONFIG}" ]; then
+		# shellcheck source=./shlog.conf.def
 		. "${DEF_CONFIG}"
 	else
 		die "cannot load config."
