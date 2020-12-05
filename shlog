@@ -322,10 +322,8 @@ gen_rss() {
 
 		# include post content ?
 		if is_yes "$rss_include_html"; then
-			post_html="$(run_lowdown "$post")"
-
 			printf '<description>\n'
-			printf '%s\n' "$post_html"
+			run_lowdown "$post_md"
 			printf '</description>\n'
 		fi
 
