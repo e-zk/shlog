@@ -50,7 +50,7 @@ run_lowdown() {
 date_to_rfc2822() {
 	date="$1"
 	format="$2"
-	rfc2822="+a, %d %b %Y 00:00:00 +0000"
+	rfc2822="+%a, %d %b %Y 00:00:00 +0000"
 
 	# for full conversion (time + tz) replace $rfc2822 with:
 	# "+%a, %d %b %Y %T %z"
