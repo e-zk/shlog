@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/sh -ex
 #
 #
 
@@ -101,7 +101,7 @@ die() {
 
 # get markdown article title by extracting the first h1.
 # requires the first line of the markdown file to be the h1.
-# $1 - markdown file
+# $1 - markdown file path
 get_md_title() {
 	md_file="$1"
 	head -n 1 "$md_file" | sed -e 's/^#\ \(.*\)$/\1/g' -e 's/\`//g'
@@ -109,7 +109,7 @@ get_md_title() {
 
 # get date from post filename.
 # requires filename to be YYYY-MM-DD-blahblah-blah.md
-# $1 - markdown file
+# $1 - markdown file path
 get_post_date() {
 	md_filename="$(bname "$1")"
 	echo "$md_filename" | sed -e 's/^\([0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]\)-.*$/\1/g'
@@ -194,7 +194,7 @@ gen_html_footer() {
 
 	printf '<footer>\n'
 	if [ -n "$page_pt" ]; then
-		printf 'View this page in <a href=\"%s\">plaintext.</a>\n' "$(bname "$page_pt")"
+		printf '<a href=\"%s\" title="open page as plain markdown">[plaintext]</a>\n' "$(bname "$page_pt")"
 	fi
 	cat "$footer_content"
 	printf '\n</footer>\n'
@@ -208,8 +208,8 @@ gen_html_postinfo() {
 	post_modified="$2"
 
 	printf '<p class="info">\n'
-	printf 'Posted: %s<br>\n' "$post_date"
-	printf 'Modified: %s<br>\n' "$post_modified"
+	printf 'posted: %s<br>\n' "$post_date"
+	printf 'modified: %s<br>\n' "$post_modified"
 	printf '</p>\n'
 }
 
@@ -222,7 +222,8 @@ gen_html_postinfo() {
 gen_html_post() {
 	post="$(bname "$1")"
 	post_title="$2"
-	post_content="$3"
+	post_content="$(echo "$3" | sed -e '/^<h1/d')"
+	extracted_h1="$(echo "$3" | sed -n '/^<h1.*<\/h1>/p')"
 	post_foot="${4}"
 	post_info="${5:-''}"
 
@@ -238,7 +239,8 @@ gen_html_post() {
 	printf '<body>\n'
 	gen_html_nav
 	printf '<main>\n'
-	printf '<h1 id="%s">%s</h1>\n' "$(html_safe "$post_title")" "$post_title" 
+	#printf '<h1 id="%s">%s</h1>\n' "$(html_safe "$post_title")" "$post_title" 
+	printf '%s\n' "$extracted_h1"
 	printf '%s\n' "$post_info"
 	printf '%s\n' "$post_content"
 	printf '</main>\n'
@@ -299,6 +301,19 @@ gen_index() {
 	printf '</main>\n'
 	printf '</body>\n'
 	printf '</html>\n'
+
+	#cat "${html_dir}/posts.md"
+	#printf '\n'
+	#for post in $(get_post_list); do
+	#	post_md="${post%%.*}.md"
+	#	post_date="$(get_post_date "$post")"
+	#	post_title="$(get_md_title "$post_md")"
+	#	post_bname="$(bname "$post")"
+#
+#		post_url="/${posts_dir}/${post_bname}"
+#
+#		printf '* [%s — %s](%s)\n' "$post_date" "$post_title" "$post_url"
+#	done
 }
 
 # generate rss feed
@@ -387,7 +402,7 @@ compile_posts() {
 		post_title="$(get_md_title "$post_md")"
 
 		# generate html from markdown
-		post_html="$(run_lowdown "$post" | sed '/^<h1\ /d')"
+		post_html="$(run_lowdown "$post")"
 
 		# generate footer
 		post_foot="$(gen_html_footer "$post_md")"
@@ -415,7 +430,7 @@ main() {
 	case "$1" in
 		h|-h|help)   usage                                 ;;
 		""|u|update) compile_posts                         ;;
-		i|index)     gen_index > "$posts_index"            ;;
+		i|index)     gen_index > "${site_root}/${posts_index}"            ;;
 		r|rss)       gen_rss > "$rss_feed"                 ;;
 		p|page)      gen_page "$3" "$2" > "$4"             ;;
 		*)           log "unsupported command $1" "error"  ;;
