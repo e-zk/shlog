@@ -1,5 +1,3 @@
-#!/bin/sh -ex
-#
 #
 
 usage() {
@@ -301,19 +299,6 @@ gen_index() {
 	printf '</main>\n'
 	printf '</body>\n'
 	printf '</html>\n'
-
-	#cat "${html_dir}/posts.md"
-	#printf '\n'
-	#for post in $(get_post_list); do
-	#	post_md="${post%%.*}.md"
-	#	post_date="$(get_post_date "$post")"
-	#	post_title="$(get_md_title "$post_md")"
-	#	post_bname="$(bname "$post")"
-#
-#		post_url="/${posts_dir}/${post_bname}"
-#
-#		printf '* [%s — %s](%s)\n' "$post_date" "$post_title" "$post_url"
-#	done
 }
 
 # generate rss feed
