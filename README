@@ -7,6 +7,10 @@ SYNOPSIS
 
 DESCRIPTION
     Generate simple static sites. shlog is geared towards blogs.
+    
+    Warn: This project is no longer intended for any use other than my own.
+    I will provide little to no support for anyone attempting to use this
+    monstrosity - use at your own risk.
 
     The subcommands are as follows:
 
