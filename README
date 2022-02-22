@@ -6,6 +6,9 @@ SYNOPSIS
     shlog [subcommand]
 
 DESCRIPTION
+    Note: This projects has been abandoned in favour of shite:
+    https://git.zakaria.org/shite/
+
     Generate simple static sites. shlog is geared towards blogs.
     
     Warn: This project is no longer intended for any use other than my own.
